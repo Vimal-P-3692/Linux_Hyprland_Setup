@@ -26,19 +26,28 @@ echo
 if [[ -f /etc/os-release ]]; then
     . /etc/os-release
     distro_id=$(echo "$ID" | tr '[:upper:]' '[:lower:]')
+    distro_like=$(echo "${ID_LIKE:-}" | tr '[:upper:]' '[:lower:]')
 else
     echo -e "${RED}❌ Unable to detect your Linux distribution.${RESET}"
     exit 1
 fi
 
-# Check if distro is supported
-if [[ ! " ${SUPPORTED[*]} " =~ " ${distro_id} " ]]; then
+# Check if distro is supported (check both ID and ID_LIKE)
+distro_detected=""
+for supported in "${SUPPORTED[@]}"; do
+    if [[ "$distro_id" == "$supported" ]] || [[ "$distro_like" == *"$supported"* ]]; then
+        distro_detected="$supported"
+        break
+    fi
+done
+
+if [[ -z "$distro_detected" ]]; then
     echo -e "${RED}❌ Unsupported distribution: ${distro_id}${RESET}"
-    echo -e "${YELLOW}Supported distros: ${SUPPORTED[*]}${RESET}"
+    echo -e "${YELLOW}Supported distros: ${SUPPORTED[*]} and their derivatives${RESET}"
     exit 1
 fi
 
-echo -e "${GREEN}✅ Detected supported distro: ${distro_id}${RESET}"
+echo -e "${GREEN}✅ Detected supported distro: ${distro_id} (base: ${distro_detected})${RESET}"
 echo
 
 # Function to install missing packages
@@ -60,7 +69,7 @@ install_missing_packages() {
 
         read -p "Do you want to install them now? (y/N): " confirm
         if [[ $confirm == "y" || $confirm == "Y" ]]; then
-            case "$distro_id" in
+            case "$distro_detected" in
                 arch|manjaro)
                     sudo pacman -S --needed "${MISSING[@]}"
                     ;;
@@ -87,21 +96,4 @@ install_missing_packages() {
 
 install_missing_packages
 
-# Confirm before running the installer
-read -p "Proceed with Dank Linux installation? (y/N): " confirm
-if [[ $confirm != "y" && $confirm != "Y" ]]; then
-    echo -e "${YELLOW}Installation cancelled.${RESET}"
-    exit 1
-fi
-
-# Run the official installer
-echo
-echo -e "${CYAN}⬇️ Running official Dank Linux installer...${RESET}"
-curl -fsSL https://install.danklinux.com | sh
-
-echo
-echo -e "${GREEN}✅ Installation completed successfully!${RESET}"
-echo
-echo -e "${YELLOW}For more details, visit:${RESET}"
-echo "👉 https://github.com/AvengeMedia/DankMaterialShell.git"
-
+# ...existing code...

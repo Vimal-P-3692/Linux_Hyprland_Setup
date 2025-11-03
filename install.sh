@@ -96,4 +96,19 @@ install_missing_packages() {
 
 install_missing_packages
 
-# ...existing code...
+echo
+echo -e "${CYAN}🎨 Setting up Hyprland with Dank Linux...${RESET}"
+echo
+
+# Run Dank Linux Hyprland installer
+if command -v curl &>/dev/null; then
+    curl -fsSL https://install.danklinux.com | sh
+else
+    echo -e "${RED}❌ curl is required but not found. Please install curl first.${RESET}"
+    exit 1
+fi
+
+echo
+echo -e "${GREEN}✅ Installation complete!${RESET}"
+echo -e "${CYAN}🎉 Hyprland has been set up successfully.${RESET}"
+echo -e "${YELLOW}💡 You may need to log out and log back in to start using Hyprland.${RESET}"
